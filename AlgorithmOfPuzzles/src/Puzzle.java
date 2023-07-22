@@ -2,6 +2,7 @@ import java.awt.image.BufferedImage;
 
 public class Puzzle {
 
+
     private final BufferedImage puzzle;
     private final int[] upperSide;
     private final int[] lowerSide;
@@ -69,5 +70,16 @@ public class Puzzle {
 
     public int getId() {
         return id;
+    }
+
+    @Override
+    public boolean equals(Object obj){
+        if(obj==null||obj.getClass()!=Puzzle.class) return false;
+        return this.id==((Puzzle)obj).getId();
+    }
+
+    @Override
+    public String toString(){
+        return "Id: " + id;
     }
 }
