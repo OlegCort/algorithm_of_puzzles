@@ -4,14 +4,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class PuzzleController {
 
-    private static final double MAX_DIVERGENCE = 0.025;
     public static List<Puzzle> puzzles = new ArrayList<>();
 
     public static List<Integer[]> horizontalRelations;
@@ -74,32 +72,36 @@ public class PuzzleController {
         return res;
     }
 
-    private static void setRelations(){
+    public static void setRelations(){
         horizontalRelations = new ArrayList<>();
         verticalRelations = new ArrayList<>();
 
-        List<Double> list = new ArrayList<>();
-        int res;
+        List<Double[]> list = new ArrayList<>();
+
         for(Puzzle puzzle1:puzzles){
             for(Puzzle puzzle2: puzzles){
                 if(puzzle1==puzzle2) continue;
                 int id1 = puzzle1.getId();
                 int id2 = puzzle2.getId();
-                if(!horizontalRelations.contains(new Integer[]{id2, id1, 1})) {
-                    list.add(checkPuzzles(id1, id2, Position.HORIZONTAL));
-                    res = checkPuzzles(id1, id2, Position.HORIZONTAL)<MAX_DIVERGENCE ? 1 : 0;
-                    horizontalRelations.add(new Integer[]{id1, id2, res});
+                list.add(new Double[]{(double)id1, (double)id2, 0.0, checkPuzzles(id1, id2, Position.HORIZONTAL)});
+                list.add(new Double[]{(double)id1, (double)id2, 1.0, checkPuzzles(id1, id2, Position.VERTICAL)});
                 }
-                if(!verticalRelations.contains(new Integer[]{id2, id1, 1})){
-                    list.add(checkPuzzles(id1, id2, Position.VERTICAL));
-                    res = checkPuzzles(id1, id2, Position.VERTICAL) < MAX_DIVERGENCE ? 1 : 0;
-                    verticalRelations.add(new Integer[]{id1, id2, res});
-                }
+        }
+        list = list.stream().sorted(Comparator.comparingDouble(x -> x[3])).collect(Collectors.toList());
+        int k = -1;
+        for(int i = 0; i<list.size()-1; ++i){
+            if(list.get(i)[3]*1.6<list.get(i+1)[3]){
+                k = i;
+                break;
             }
         }
+        System.out.println(k);
 
-        System.out.println(list.stream().sorted(Double::compare).toList());
-
+        for(int i = 0; i<=k; ++i){
+            Double[] params = list.get(i);
+            if(params[2]==0.0) horizontalRelations.add(new Integer[]{params[0].intValue(), params[1].intValue(), 1});
+            else verticalRelations.add(new Integer[]{params[0].intValue(), params[1].intValue(), 1});
+        }
     }
 
     public static void showRelations(){
