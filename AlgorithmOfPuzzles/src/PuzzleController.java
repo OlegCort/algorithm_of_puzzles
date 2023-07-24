@@ -21,14 +21,12 @@ public class PuzzleController {
         Puzzle puzzle1 = new Puzzle(puzzle);
         puzzles.add(puzzle1);
     }
-    public static void readPuzzles(String path) throws IOException {
-        File folder = new File(path);
+    public static void readPuzzles(File folder) throws IOException {
+       // File folder = new File(path);
         for (final File fileEntry : folder.listFiles()) {
             if(ImageIO.read(fileEntry)!=null){
-                System.out.println(fileEntry.getName());
                 addPuzzle(ImageIO.read(fileEntry));
             }
-
         }
     }
 
@@ -36,7 +34,7 @@ public class PuzzleController {
         return puzzles.stream().filter(puzzle -> puzzle.getId()==id).findFirst().orElse(null);
     }
 
-    public static double checkPuzzles(int id1, int id2, Position position){
+    private static double checkPuzzles(int id1, int id2, Position position){
         Puzzle puzzle1 = getById(id1);
         Puzzle puzzle2 = getById(id2);
         if(puzzle1==null||puzzle2==null) return 1;
@@ -65,14 +63,10 @@ public class PuzzleController {
         for(Double num: relations)
             res+=num;
         res/=relations.size();
-       // System.out.println(id1+ " " + id2);
-        //System.out.println(res);
-       // return !(relations.stream().sorted((x, y) -> Double.compare(y, x)).findFirst().get() > MAX_DIVERGENCE);
-       // return (res < MAX_DIVERGENCE);
         return res;
     }
 
-    public static void setRelations(){
+    private static void setRelations(){
         horizontalRelations = new ArrayList<>();
         verticalRelations = new ArrayList<>();
 
@@ -95,29 +89,18 @@ public class PuzzleController {
                 break;
             }
         }
-        System.out.println(k);
 
         for(int i = 0; i<=k; ++i){
             Double[] params = list.get(i);
-            if(params[2]==0.0) horizontalRelations.add(new Integer[]{params[0].intValue(), params[1].intValue(), 1});
-            else verticalRelations.add(new Integer[]{params[0].intValue(), params[1].intValue(), 1});
-        }
-    }
-
-    public static void showRelations(){
-        for(int i = 0; i<horizontalRelations.size(); ++i){
-            System.out.println(horizontalRelations.get(i)[0] + " " + horizontalRelations.get(i)[1] + " " + horizontalRelations.get(i)[2]);
-        }
-        System.out.println("\n");
-        for(int i = 0; i<horizontalRelations.size(); ++i){
-            System.out.println(verticalRelations.get(i)[0] + " " + verticalRelations.get(i)[1] + " " + verticalRelations.get(i)[2]);
+            if(params[2]==0.0) horizontalRelations.add(new Integer[]{params[0].intValue(), params[1].intValue()});
+            else verticalRelations.add(new Integer[]{params[0].intValue(), params[1].intValue()});
         }
     }
 
     private static List<Puzzle> getLeftPuzzles(){
         List<Puzzle> res = new ArrayList<>();
         for(Puzzle puzzle: puzzles){
-            List<Integer[]> list = verticalRelations.stream().filter(x->(x[1]== puzzle.getId())&&(x[2]==1)).toList();
+            List<Integer[]> list = verticalRelations.stream().filter(x->(x[1]== puzzle.getId())).toList();
             if(list.isEmpty()) res.add(puzzle);
         }
         return res;
@@ -125,12 +108,11 @@ public class PuzzleController {
 
     private static void getLeftSide(){
         List<Puzzle> leftSide = getLeftPuzzles();
-        System.out.println(leftSide);
 
         Puzzle upperLeft = null;
         for(Puzzle puzzle: leftSide){
             int id = puzzle.getId();
-            List<Integer[]> list = horizontalRelations.stream().filter(x->x[1]==id).filter(x->x[2]==1).toList();
+            List<Integer[]> list = horizontalRelations.stream().filter(x->x[1]==id).toList();
             if(list.size()==0){
                 upperLeft = puzzle;
                 break;
@@ -141,40 +123,22 @@ public class PuzzleController {
 
         for(int i = 1; i< leftSide.size(); ++i){
             final int j = i;
-            int id = horizontalRelations.stream().filter(x->x[0]==field[j-1][0]&&x[2]==1).findFirst().get()[1];
+            int id = horizontalRelations.stream().filter(x->x[0]==field[j-1][0]).findFirst().get()[1];
             field[i][0] = id;
-        }
-        System.out.println("Field with left side completed:");
-        for (int[] ints : field) {
-            for (int j = 0; j < field[0].length; ++j) {
-                System.out.print(ints[j] + " ");
-            }
-            System.out.println();
         }
     }
 
-    private static void completeField(){
-        for(int i = 0; i<field.length; ++i){
-            for(int j = 1; j<field[0].length; ++j){
-                final int k = field[i][j-1];
-                int id = verticalRelations.stream().filter(x->x[0]==k&&x[2]==1).findFirst().get()[1];
+    private static void completeField() {
+        for (int i = 0; i < field.length; ++i) {
+            for (int j = 1; j < field[0].length; ++j) {
+                final int k = field[i][j - 1];
+                int id = verticalRelations.stream().filter(x -> x[0] == k).findFirst().get()[1];
                 field[i][j] = id;
             }
         }
-
-        System.out.println("Field completed:");
-        for (int[] ints : field) {
-            for (int j = 0; j < field[0].length; ++j) {
-                System.out.print(ints[j] + " ");
-            }
-            System.out.println();
-        }
-
     }
-
-
     private static void buildImage() throws IOException {
-        BufferedImage source =new BufferedImage(puzzles.get(0).getPuzzle().getWidth()*field.length, puzzles.get(0).getPuzzle().getHeight()*field[0].length, BufferedImage.TYPE_INT_BGR);
+        BufferedImage source =new BufferedImage(puzzles.get(0).getPuzzle().getWidth()*field[0].length, puzzles.get(0).getPuzzle().getHeight()*field.length, BufferedImage.TYPE_INT_BGR);
 
         Graphics g = source.getGraphics();
 
@@ -185,8 +149,8 @@ public class PuzzleController {
         }
         g.dispose();
 
-        //File outputFile = new File("/Users/olegmisialo/Desktop/result.png");
-        //ImageIO.write(source, "png", outputFile);
+//        File outputFile = new File("/Users/olegmisialo/Desktop/result.png");
+//        ImageIO.write(source, "png", outputFile);
 
         EventQueue.invokeLater(new Runnable() {
 
@@ -217,15 +181,11 @@ public class PuzzleController {
     }
     public static void buildPuzzle() throws IOException {
         setRelations();
-        showRelations();
         getLeftSide();
         completeField();
         buildImage();
 
     }
-
-
-
 
 
 }

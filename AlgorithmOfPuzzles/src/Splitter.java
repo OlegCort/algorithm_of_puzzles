@@ -25,7 +25,7 @@ public class Splitter {
         int counter = 1;
         for(BufferedImage piece: pieces){
 
-            File outputfile = new File("src/puzzles/piece"+counter+  ".png");
+            File outputfile = new File("/Users/olegmisialo/Desktop/Puzzles/set4/"+counter+  ".png");
             ImageIO.write(piece, "png", outputfile);
             counter++;
         }
